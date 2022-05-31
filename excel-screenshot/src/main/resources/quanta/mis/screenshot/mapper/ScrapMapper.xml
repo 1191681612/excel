@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="quanta.mis.screenshot.mapper.ScrapMapper">
+
+    <resultMap id="allList" type="quanta.mis.screenshot.pojo.Pu">
+        <result column="pu" property="name" />
+        <collection property="modelList" ofType="quanta.mis.screenshot.pojo.Model">
+            <result column="model" property="name"/>
+            <result column="input_qty" property="inputQty"/>
+            <result column="scrap_total_amount" property="scrapTotalAmount"/>
+            <result column="scrap_average_amount" property="scrapAverageAmount"/>
+            <collection property="productionNameList" ofType="quanta.mis.screenshot.pojo.ProductionName">
+                <result column="production_name" property="name"/>
+                <result column="scrap_qty" property="scrapQty"/>
+                <result column="scrap_rate" property="scrapRate"/>
+            </collection>
+        </collection>
+    </resultMap>
+    
+    
+    <sql id="Base_Column_List">
+        year ,
+        month,
+        pu,
+        model,
+        production_name,
+        input_qty,
+        scrap_qty,
+        scrap_rate,
+        scrap_total_amount,
+        scrap_average_amount
+    </sql>
+
+
+    <select id="findAllPuData" parameterType="puListQuery" resultMap="allList">
+        select
+        <include refid="Base_Column_List"/>
+        from mm_scrap
+        <where>
+            <if test="puListQuery!=null">
+                <if test="puListQuery.puList!=null">
+                    <foreach collection="puListQuery.puList" item="item" >
+                        <if test="item.modelList!=null and item.modelList.size()>0">
+                            <foreach collection="item.modelList" item="item1">
+                                or
+                                <if test="item1.productionNameList!=null and item1.productionNameList.size()>0">
+                                    <foreach collection="item1.productionNameList" item="item2" separator="or">
+                                        ( year= #{puListQuery.dayInfo.year}
+                                        and month = #{puListQuery.dayInfo.month}
+                                        and pu = #{item.name}
+                                        and model =#{item1.name}
+                                        and production_name = #{item2.name}
+                                        )
+                                    </foreach>
+                                </if>
+                            </foreach>
+                        </if>
+                    </foreach>
+                </if>
+            </if>
+        </where>
+    </select>
+
+</mapper>

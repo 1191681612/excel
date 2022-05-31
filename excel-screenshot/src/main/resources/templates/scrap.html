@@ -1,0 +1,408 @@
+﻿<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title>[[${chartVo.title}]]</title>
+    <script th:src="@{../../static/js/echarts.js}"></script>
+    <script th:src="@{../../static/js/jquery-1.8.3.min.js}"></script>
+    <link type="text/css" rel="stylesheet" th:href="@{../../static/css/table.css}"/>
+    <!--  <script src="js/echarts.js"></script>-->
+    <!--  <script src="js/jquery-1.8.3.min.js"></script>-->
+    <!--  <link type="text/css" rel="stylesheet" href="css/table.css"/>-->
+</head>
+<body>
+<div>
+    <div id="table" style="text-align: center;">
+        <table width="1600px" height="100px" cellspacing="0" cellpadding="2" align="center">
+            <thead>
+            <tr>
+                <th style="background-color: #FFFF00" class="btgn" colspan="2">PU</th>
+                <th th:each="pu,stat:${chartVo.legendData}" colspan="5" class="btgn" th:text="${pu}"
+                    th:if="*{not #lists.isEmpty(chartVo.legendData)}"></th>
+            </tr>
+            <tr>
+                <th name="dep">部门</th>
+                <th name="dep">品名</th>
+
+                <div th:each="pu,stat:${chartVo.legendData}" th:if="*{not #lists.isEmpty(chartVo.legendData)}"
+                     th:remove="tag">
+                    <th>投入数量</th>
+                    <th>报废数量</th>
+                    <th>报废率</th>
+                    <th rowspan="8">报废总金额(USD)</th>
+                    <th rowspan="11">平均每台金额(USD)</th>
+                </div>
+            </tr>
+            </thead>
+            <tbody>
+            <span th:remove="tag" th:each="departmentT,depStat:${chartVo.puList.get(0).modelList}"
+                  th:with="depSize=${chartVo.puList.get(0).modelList.size()}">
+        <span th:remove="tag" th:each="description,desStat:${departmentT.productionNameList}"
+              th:with="descSize=${departmentT.productionNameList.size()}">
+          <tr>
+            <span th:remove="tag" th:each="puCol,puStat :${chartVo.puList}"
+                  th:with="puSize=${chartVo.puList.size()}">
+              <!--                            根据数字循环,循环pu的每一列数据,循环-->
+              <span th:remove="tag" th:each="i:${#numbers.sequence(1, 5)}">
+                <span th:remove="tag" th:if="${departmentT.name} and ${departmentT.name ne description.name}">
+                  <td th:rowspan="${descSize}"
+                      th:if="${desStat.count eq 1} and ${puStat.count eq 1} and ${i eq 1}"
+                      th:text="${departmentT?.name}">
+                  </td>
+                  <td th:if="${desStat.count le descSize} and ${puStat.count eq 1} and ${i eq 1}"
+                      th:text="${description?.name}"
+                  >
+                  </td>
+                </span>
+                <span th:remove="tag" th:unless="${departmentT?.name} and ${departmentT.name ne description.name}">
+                  <td colspan="2"
+                      th:if="${desStat.count le descSize} and ${puStat.count eq 1} and ${i eq 1} "
+                      th:text="${description?.name}"
+                  >
+                  </td>
+                </span>
+                <td th:rowspan="${descSize}" th:if="${i eq 1} and ${desStat.count eq 1}">
+                </td>
+                <td th:if="${i eq 2}"></td>
+                <td th:if="${i eq 3}"></td>
+                <td th:rowspan="${descSize}" th:if="${i eq 4}  and ${desStat.count eq 1}"></td>
+                <td th:if="${i eq 5} "
+                    th:class="'flag_'+${departmentT.name==description.name?description.name+puCol.name:puCol.name}+${i}">
+                </td>
+              </span>
+            </span>
+          </tr>
+        </span>
+      </span>
+            </tbody>
+        </table>
+    </div>
+    <div id="bar" style="width:1950px; height: 300px;text-align: center"></div>
+</div>
+<script type="text/javascript" th:inline="javascript">
+  var chart = echarts.init(document.getElementById('bar'));
+
+  // var xAxisData = ["COVER", "TOP", "BASE", "BEZEL", "KB", "31MB", "99MB", "MASTER", "CPU", "31MB", "99MB", " "];
+  var xAxisData = [[${chartVo.xAxisData}]];
+
+  // var xAxisGroupData = ["", "", "", "{offset|}FA", "", "", "", "", "", "SMT", "", " CAMERA"];  分组显示的标签（组内如果是偶数加上偏移{offset|}，如果是计数放正中间）
+  var xAxisGroupData = [[${chartVo.xAxisGroupData}]];
+
+  // var seriesData = [null, null, 0.15, 0.16, 0.11, 0.16, 0.057, 1, 0.2, 0.15, 0.16, null];
+  var seriesData = [[${chartVo.seriesData}]];
+
+  // var groupSeparates = [true, false, false, false, false, false, false, false, true, false, false, true, true];
+  var groupSeparates = [[${chartVo.groupSeparates}]]; // 分组分隔线
+
+  // var legendData = ['PU5', 'PU3', 'PU4', 'PU7'];
+  var legendData = [[${chartVo.legendData}]];
+
+  var puList = [[${chartVo.puList}]]
+
+  // 指定图表的配置项和数据
+  var option = {
+    title: {
+      text: [[${chartVo.title}]],
+      textStyle: {color: "#000000", fontWeight: 'bold', fontFamily: "Microsoft YaHei",},
+      left: "44%",
+      top: "5%"
+    },
+    tooltip: {},
+    legend: {
+      data: legendData,
+      top: "90%",
+      itemStyle: {borderCap: "square"}
+    },
+    xAxis: [
+      {
+        position: "bottom",
+        data: xAxisData,
+        axisTick: {
+          length: 20, // 刻度线的长度
+          show: false,
+          lineStyle: {
+            color: "#D9D9D9"
+          }
+        },
+        axisLabel: {
+          margin: 10, // 标签到轴线的距离
+          textStyle: {
+            color: '#595959'   //坐标轴文字的颜色
+          },
+          fontFamily: "Microsoft YaHei"
+        },
+        axisLine: {
+          show: true,//是否显示轴线
+          lineStyle: {
+            color: '#D9D9D9',//x轴的颜色
+          }
+        }
+      },
+      {
+        position: "bottom",
+        data: xAxisGroupData,
+        axisTick: {
+          length: 50,
+          interval: function (index, value) {
+            return groupSeparates[index]; // 根据标识分组的刻度线
+          },
+          lineStyle: {
+            color: "#D9D9D9"
+          }
+        },
+        axisLabel: {
+          margin: 40,
+          interval: 0, // 显示所有标签
+          rich: {
+            offset: {
+              width: 0
+            }
+          },
+          textStyle: {
+            color: '#595959'   //坐标轴文字的颜色
+          }
+        },
+        axisLine: {
+          show: false,//是否显示轴线
+          lineStyle: {
+            color: '#D9D9D9',//x轴的颜色
+          }
+        }
+
+      }],
+    yAxis: {
+      splitNumber: 5,
+      min:0,  //取0为最小刻度
+      max: 1, //取100为最大刻度
+      scale: true, //自适应
+       minInterval:0.25,//间距
+      axisTick: {
+        length: 1
+      },
+      axisLabel: {
+        formatter: function (value, index) {
+          return value.toFixed(2)*100 + "%"    //转为百分数,toFixed(2)表示保留2位小数
+        }
+      }
+    },
+    series: [
+      {
+        name: legendData[0],
+        type: 'bar',
+        data: seriesData[0],
+
+        label: {
+          show: true, //开启显示
+          position: 'top', //在上方显示
+          textStyle: { //数值样式
+            color: 'black',
+            fontSize: 10
+          },
+          formatter(params) {
+            return (params.data*100).toFixed(2) + "%"
+          }
+        }
+      },
+      {
+        name: legendData[1],
+        type: 'bar',
+        data: seriesData[1],
+
+        label: {
+          show: true, //开启显示
+          position: 'top', //在上方显示
+          textStyle: { //数值样式
+            color: 'black',
+            fontSize: 10
+          },
+          formatter(params) {
+            return (params.data*100).toFixed(2) + "%"
+          }
+        }
+      },
+      {
+        name: legendData[2],
+        type: 'bar',
+        data: seriesData[2],
+        label: {
+          show: true, //开启显示
+          position: 'top', //在上方显示
+          textStyle: { //数值样式
+            color: 'black',
+            fontSize: 10
+          },
+          // formatter: '{c}%'
+          formatter(params) {
+            return (params.data*100).toFixed(2) + "%"
+          }
+        }
+
+      },
+      {
+        name: legendData[3],
+        type: 'bar',
+        data: seriesData[3],
+        label: {
+          show: true, //开启显示
+          position: 'top', //在上方显示
+          textStyle: { //数值样式
+            color: 'black',
+            fontSize: 10
+          },
+          formatter(params) {
+            return (params.data*100).toFixed(2) + "%"
+          }
+        }
+      }
+    ]
+  };
+
+
+  chart.lastBandWidth = 0;
+  // 监听渲染事件，只要bandWidth发生变化，重新设置标签偏移的值
+  chart.on('rendered', function () {
+    var bandWidth = chart._chartsViews[0].renderTask.context.outputData._layout.bandWidth;
+    if (chart.lastBandWidth != bandWidth) {
+      chart.lastBandWidth = bandWidth;
+      // 延时执行否则echarts渲染异常
+      setTimeout(() => {
+        // 加上偏移后重新绘制
+        var optionNew = {
+          xAxis: [{}, {}]
+        };
+        // 增量更新偏移值
+        optionNew.xAxis[1] = {
+          axisLabel: {rich: {offset: {width: chart.lastBandWidth}}}
+        };
+        // console.info(optionNew);
+        chart.setOption(optionNew);
+      }, 0);
+    }
+  });
+
+  // 绘制
+  chart.setOption(option);
+  var cym = jQuery.noConflict();
+
+  cym(function () {
+
+
+    const tr = cym("tbody tr");
+    var startCol = 1;
+
+    cym.each(puList, function (puIndex, pu) {
+      //记录description的循环次数
+      var countDescription = 0;
+
+      //记录没有部门开始写入数据的列数
+      var col = 1;
+      //每个部门第一个品名开始写入数据的列数
+      var firstDescCol = 2 + 5 * puIndex;
+      cym(pu.modelList).each(function (departmentIndex, department) {
+        cym(department.productionNameList).each(function (descriptionIndex, productionName) {
+          const tds = tr.eq(countDescription);
+          if (descriptionIndex === 0 && department.name===productionName.name) {
+            if (productionName.name) {
+              var proScrapQty =   productionName.scrapQty;
+              if(proScrapQty){
+              //报废数量
+                tds.find("td").eq(firstDescCol ).text(proScrapQty);
+              }
+
+              var proScrapRate = productionName.scrapRate*100;
+               if(proScrapRate){
+                //报废率
+                tds.find("td").eq(firstDescCol + 1).text(proScrapRate.toFixed(2) + "%").addClass("tdRate");
+               }
+              var depScrapAverageAmount = department.scrapAverageAmount;
+              if(depScrapAverageAmount){
+                 //投入金额
+                tds.find("td").eq(firstDescCol + 3).text(depScrapAverageAmount);
+              }
+
+            }
+            var inputQty = department.inputQty;
+            if (inputQty) {
+              //部门投入总数量
+              tds.find("td").eq(firstDescCol-1).text(inputQty);
+            }
+            var scrapTotalAmount = department.scrapTotalAmount;
+            if (scrapTotalAmount) {
+              //部门报废总金额
+              tds.find("td").eq(firstDescCol + 2).text(Math.round(scrapTotalAmount));
+            }
+          }
+           if (productionName) {
+            if (department) {
+              if (descriptionIndex !== 0 && department.name != productionName.name) {
+
+                 //报废数量
+                    tds.find("td").eq(startCol).text(productionName.scrapQty);
+
+
+                 //报废率
+                tds.find("td").eq(startCol + 1).text((productionName.scrapRate*100).toFixed(2) + "%").addClass("tdRate");
+
+                departAmount = department.scrapAverageAmount;
+                if(departAmount){
+                tds.find("td").eq(startCol + 2).text(departAmount)
+                }
+                tds.find("td").eq(startCol + 2).attr("data-dep", Math.round(department.scrapAverageAmount));
+              }else if(descriptionIndex === 0 && department.name != productionName.name){
+                  //投入数量
+                var inputNum = department.inputQty;
+                if(inputNum){
+                 tds.find("td").eq(firstDescCol).text(inputNum);
+                }
+
+                //报废数量
+                tds.find("td").eq(firstDescCol+1).text(productionName.scrapQty);
+
+
+                 //报废率
+                tds.find("td").eq(firstDescCol+2).text((productionName.scrapRate*100).toFixed(2) + "%").addClass("tdRate");
+
+               var  depTotalAmount=  department.scrapTotalAmount;
+               if(depTotalAmount){
+                 //报废总金额
+                tds.find("td").eq(firstDescCol+3).text(Math.round(depTotalAmount));
+               }
+                //平均每台金额
+                avg = department.scrapAverageAmount;
+                if(avg){
+                     tds.find("td").eq(firstDescCol+4).text(avg.toFixed(2));
+                }
+                tds.find("td").eq(firstDescCol+4).attr("data-dep", Math.round(department.scrapAverageAmount))
+			}
+
+            }
+          }
+          countDescription++;
+        })
+      })
+      // firstDescCol = firstDescCol + 5;
+      startCol = startCol + 3;
+      col = col + 5;
+    })
+
+    cym("td[class^='flag_']").each(function (index, element) {
+      var cla = cym(element).attr("class");
+      var obj = cym('tbody').find("." + cla);
+      if (obj.length >= 1) {
+        //合并
+        obj.eq(0).attr("rowspan", obj.length).val(obj.eq(0).data("dep"));
+        obj.eq(0).removeClass(cla).removeAttr("data-dep");
+        cym('tbody').find("." + cla).remove();
+      }
+    })
+  })
+
+
+
+
+
+</script>
+</body>
+</html>
